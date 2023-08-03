@@ -121,9 +121,13 @@ impl Backend {
         let diagnostics = errors
             .into_iter()
             .filter_map(|item| {
-                let message = item.message?;
+                let message = item.message.unwrap_or_else(|| "parse error".to_string());
                 let range = {
                     let input = item.input.trim();
+                    // the parser sometimes returns an error with an empty message and empty input
+                    if input.is_empty() {
+                        return None;
+                    }
                     let start = &params.text.offset(input);
                     let end = start + input.len();
                     Range::new(
